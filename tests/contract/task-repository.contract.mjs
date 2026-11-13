@@ -82,6 +82,38 @@ export function defineTaskRepositoryContract(
             expect(tasks).toHaveLength(1);
         });
 
+        it("doit déplacer une tâche d'un projet vers un autre", async () => {
+            const repository = newRepository();
+
+            const task = {
+                id: "t1",
+                title: "Préparer les tests",
+                dueDate: null,
+                projectId: "p1",
+                completed: false,
+                createdAt: "2026-11-13T10:00:00.000Z"
+            };
+
+            await repository.addTask(task);
+
+            const movedTask = {
+                ...task,
+                projectId: "p2"
+            };
+
+            await repository.updateTask(movedTask);
+
+            const oldProjectTasks =
+                await repository.getTasksByProjectId("p1");
+
+            const newProjectTasks =
+                await repository.getTasksByProjectId("p2");
+
+            expect(oldProjectTasks).toEqual([]);
+            expect(newProjectTasks).toContainEqual(movedTask);
+            expect(newProjectTasks).toHaveLength(1);
+        });
+
         it("doit supprimer une tâche existante", async () => {
             const repository = newRepository();
 
