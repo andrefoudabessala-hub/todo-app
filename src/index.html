@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Gestionnaire de tâches</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>Gestionnaire de tâches</h1>
+        <p>Organisation des projets et des tâches</p>
+    </header>
+
+    <main>
+
+        <section id="projects-section">
+
+            <h2>Mes projets</h2>
+
+            <form id="project-form">
+
+                <label for="project-name">
+                    Nom du projet
+                </label>
+
+                <input
+                    type="text"
+                    id="project-name"
+                    placeholder="Ex : Projet INF563"
+                    required
+                >
+
+                <button type="submit">
+                    Ajouter le projet
+                </button>
+
+            </form>
+
+            <ul id="project-list"></ul>
+
+        </section>
+
+       <section id="tasks-section">
+
+    <h2>Tâches</h2>
+
+    <p id="no-project-message">
+        Sélectionnez un projet pour afficher ses tâches.
+    </p>
+
+    <div id="task-content" style="display: none;">
+
+        <h3 id="selected-project-name"></h3>
+
+        <form id="task-form">
+
+            <label for="task-title">
+                Titre de la tâche
+            </label>
+
+            <input
+                type="text"
+                id="task-title"
+                placeholder="Ex : Réaliser les tests"
+                required
+            >
+
+            <label for="task-description">
+                Description
+            </label>
+
+            <textarea
+                id="task-description"
+                placeholder="Décrivez la tâche..."
+            ></textarea>
+
+            <button type="submit">
+                Ajouter la tâche
+            </button>
+
+        </form>
+
+        <ul id="task-list"></ul>
+
+    </div>
+
+</section>
+    </main>
+
+    <script src="js/database.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,15 @@
+
+# Dépendances Node.js
+node_modules/
+
+# Rapports et résultats de tests
+coverage/
+playwright-report/
+test-results/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Fichiers temporaires
+*.log

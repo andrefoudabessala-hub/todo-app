@@ -1,0 +1,193 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: #f4f6f8;
+    color: #222;
+}
+
+header {
+    background-color: #263238;
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+header h1 {
+    margin: 0 0 10px;
+}
+
+header p {
+    margin: 0;
+}
+
+main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+section {
+    background-color: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+h2 {
+    margin-top: 0;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    background-color: #1976d2;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #125ca8;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    padding: 12px;
+    margin-bottom: 8px;
+    background-color: #f1f3f4;
+    border-radius: 5px;
+}
+
+#project-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+#project-list li span {
+    flex: 1;
+}
+
+#project-list li button {
+    padding: 8px 12px;
+}
+
+/* Organisation de l'affichage des tâches */
+#task-list li {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 15px;
+    padding: 12px;
+}
+
+/* Le titre et la description occupent toute la largeur */
+#task-list li strong,
+#task-list li p {
+    flex-basis: 100%;
+    margin: 0;
+}
+
+/* Le statut reste proche de sa case à cocher */
+#task-list li label {
+    margin-right: auto;
+}
+
+/* Le bouton Modifier est placé à droite */
+#task-list li button {
+    margin-left: auto;
+    padding: 8px 16px;
+}
+
+/* ========================================
+   ORGANISATION DES TÂCHES
+======================================== */
+
+#task-list .task-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+/* Zone titre et description */
+#task-list .task-information {
+    flex: 1 1 100%;
+}
+
+#task-list .task-information strong {
+    display: block;
+    margin-bottom: 6px;
+}
+
+#task-list .task-information p {
+    margin: 0;
+}
+
+/* Zone du statut */
+#task-list .task-status-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Zone des boutons */
+#task-list .task-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+}
+
+/* Boutons des tâches */
+#task-list .task-actions button {
+    padding: 8px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Espacement et alignement des boutons des projets */
+#project-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+#project-list li span {
+    flex: 1;
+}
+
+#project-list li button {
+    padding: 8px 12px;
+    cursor: pointer;
+}
