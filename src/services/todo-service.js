@@ -6,6 +6,10 @@ const {
     validateDueDate
 } = require("../domain/task");
 
+const {
+    calculateTaskStatistics
+} = require("../domain/task-statistics");
+
 class TodoService {
     constructor({ repository, clock, idGenerator }) {
         this.repository = repository;
@@ -46,14 +50,9 @@ class TodoService {
     // ========================================
 
     async createTask({ title, dueDate, projectId }) {
-
-        // Validation du titre
         const validTitle = validateTaskTitle(title);
-
-        // Validation de la date
         const validDueDate = validateDueDate(dueDate);
 
-        // Vérification du projet
         if (projectId === undefined || projectId === null || projectId === "") {
             throw new Error("Un projet doit être associé à la tâche.");
         }
@@ -68,7 +67,6 @@ class TodoService {
             throw new Error("Le projet associé à cette tâche n'existe pas.");
         }
 
-        // Construction de la tâche
         const task = {
             id: this.idGenerator(),
             title: validTitle,
@@ -78,7 +76,6 @@ class TodoService {
             createdAt: this.clock().toISOString()
         };
 
-        // Enregistrement
         return await this.repository.addTask(task);
     }
 
@@ -87,16 +84,12 @@ class TodoService {
     // ========================================
 
     async updateTask(taskId, changes) {
-
-        // Vérification des paramètres
         if (!changes || typeof changes !== "object" || Array.isArray(changes)) {
             throw new Error("Les modifications fournies sont invalides.");
         }
 
-        // Récupération des projets
         const projects = await this.repository.getAllProjects();
 
-        // Recherche de la tâche dans les différents projets
         let existingTask = null;
 
         for (const project of projects) {
@@ -113,22 +106,18 @@ class TodoService {
             throw new Error("La tâche à modifier n'existe pas.");
         }
 
-        // Conservation des propriétés existantes
         const updatedTask = {
             ...existingTask
         };
 
-        // Validation du titre
         if (Object.prototype.hasOwnProperty.call(changes, "title")) {
             updatedTask.title = validateTaskTitle(changes.title);
         }
 
-        // Validation de la date d'échéance
         if (Object.prototype.hasOwnProperty.call(changes, "dueDate")) {
             updatedTask.dueDate = validateDueDate(changes.dueDate);
         }
 
-        // Vérification du nouveau projet
         if (Object.prototype.hasOwnProperty.call(changes, "projectId")) {
             const projectExists = projects.some(
                 project => project.id === changes.projectId
@@ -136,14 +125,13 @@ class TodoService {
 
             if (!projectExists) {
                 throw new Error(
-                    "Le nouveau projet associé à la tâche n'existe pas."
+                    "Le nouveau projet associé à cette tâche n'existe pas."
                 );
             }
 
             updatedTask.projectId = changes.projectId;
         }
 
-        // Modification éventuelle de l'état d'achèvement
         if (Object.prototype.hasOwnProperty.call(changes, "completed")) {
             if (typeof changes.completed !== "boolean") {
                 throw new Error(
@@ -154,8 +142,43 @@ class TodoService {
             updatedTask.completed = changes.completed;
         }
 
-        // Enregistrement de la tâche modifiée
         return await this.repository.updateTask(updatedTask);
+    }
+
+    // ========================================
+    // ACHÈVEMENT D'UNE TÂCHE
+    // ========================================
+
+    async setTaskCompleted(taskId, completed) {
+        if (typeof completed !== "boolean") {
+            throw new Error(
+                "L'état d'achèvement doit être booléen."
+            );
+        }
+
+        return await this.updateTask(taskId, {
+            completed
+        });
+    }
+
+    // ========================================
+    // STATISTIQUES D'UN PROJET
+    // ========================================
+
+    async getTaskStatistics(projectId) {
+        const projects = await this.repository.getAllProjects();
+
+        const projectExists = projects.some(
+            project => project.id === projectId
+        );
+
+        if (!projectExists) {
+            throw new Error("Le projet demandé n'existe pas.");
+        }
+
+        const tasks = await this.repository.getTasksByProjectId(projectId);
+
+        return calculateTaskStatistics(tasks);
     }
 }
 
