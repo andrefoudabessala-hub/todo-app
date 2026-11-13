@@ -1,6 +1,11 @@
 
 const { validateProjectName } = require("../domain/project");
 
+const {
+    validateTaskTitle,
+    validateDueDate
+} = require("../domain/task");
+
 class TodoService {
     constructor({ repository, clock, idGenerator }) {
         this.repository = repository;
@@ -8,14 +13,15 @@ class TodoService {
         this.idGenerator = idGenerator;
     }
 
+    // ========================================
+    // GESTION DES PROJETS
+    // ========================================
+
     async createProject(name) {
-        // Validation du nom
         const validName = validateProjectName(name);
 
-        // Récupération des projets existants
         const projects = await this.repository.getAllProjects();
 
-        // Vérification de l'unicité, sans tenir compte de la casse
         const normalizedName = validName.toLowerCase();
 
         const alreadyExists = projects.some(
@@ -26,7 +32,6 @@ class TodoService {
             throw new Error("Un projet portant ce nom existe déjà.");
         }
 
-        // Création du projet
         const project = {
             id: this.idGenerator(),
             name: validName,
@@ -34,6 +39,47 @@ class TodoService {
         };
 
         return await this.repository.addProject(project);
+    }
+
+    // ========================================
+    // GESTION DES TÂCHES
+    // ========================================
+
+    async createTask({ title, dueDate, projectId }) {
+
+        // Validation du titre
+        const validTitle = validateTaskTitle(title);
+
+        // Validation de la date
+        const validDueDate = validateDueDate(dueDate);
+
+        // Vérification du projet
+        if (projectId === undefined || projectId === null || projectId === "") {
+            throw new Error("Un projet doit être associé à la tâche.");
+        }
+
+        const projects = await this.repository.getAllProjects();
+
+        const projectExists = projects.some(
+            project => project.id === projectId
+        );
+
+        if (!projectExists) {
+            throw new Error("Le projet associé à cette tâche n'existe pas.");
+        }
+
+        // Construction de la tâche
+        const task = {
+            id: this.idGenerator(),
+            title: validTitle,
+            dueDate: validDueDate,
+            projectId,
+            completed: false,
+            createdAt: this.clock().toISOString()
+        };
+
+        // Enregistrement
+        return await this.repository.addTask(task);
     }
 }
 
