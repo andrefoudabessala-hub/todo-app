@@ -1,0 +1,31 @@
+
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "testRunner": "vitest",
+  "concurrency": 2,
+  "mutate": [
+    "src/domain/project.js",
+    "src/domain/task.js",
+    "src/domain/task-statistics.js",
+    "src/services/todo-service.js"
+  ],
+  "vitest": {
+    "related": false
+  },
+  "reporters": [
+    "clear-text",
+    "html",
+    "json"
+  ],
+  "htmlReporter": {
+    "fileName": "reports/mutation/index.html"
+  },
+  "jsonReporter": {
+    "fileName": "reports/mutation/mutation.json"
+  },
+  "thresholds": {
+    "high": 80,
+    "low": 60,
+    "break": null
+  }
+}

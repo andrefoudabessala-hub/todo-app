@@ -12,7 +12,7 @@ describe("Modification des tâches dans le service", () => {
             id: "t1",
             title: "Ancien titre",
             dueDate: "2026-11-20",
-            projectId: "p1",
+            projectId: "p2",
             completed: false,
             createdAt: "2026-11-13T10:00:00.000Z"
         };
@@ -22,7 +22,11 @@ describe("Modification des tâches dans le service", () => {
                 { id: "p1", name: "Projet INF563" },
                 { id: "p2", name: "Projet Java" }
             ]),
-            getTasksByProjectId: vi.fn().mockResolvedValue([task]),
+
+            getTasksByProjectId: vi.fn(async projectId => {
+                return projectId === "p2" ? [task] : [];
+            }),
+
             updateTask: vi.fn(async updatedTask => updatedTask)
         };
 
@@ -61,10 +65,10 @@ describe("Modification des tâches dans le service", () => {
         const { service } = createTestEnvironment();
 
         const updatedTask = await service.updateTask("t1", {
-            projectId: "p2"
+            projectId: "p1"
         });
 
-        expect(updatedTask.projectId).toBe("p2");
+        expect(updatedTask.projectId).toBe("p1");
     });
 
     it("doit conserver les propriétés non modifiées", async () => {
@@ -78,7 +82,64 @@ describe("Modification des tâches dans le service", () => {
         expect(updatedTask.createdAt).toBe("2026-11-13T10:00:00.000Z");
         expect(updatedTask.completed).toBe(false);
         expect(updatedTask.dueDate).toBe("2026-11-20");
-        expect(updatedTask.projectId).toBe("p1");
+        expect(updatedTask.projectId).toBe("p2");
+    });
+
+    it("doit rechercher une tâche dans les projets jusqu'à la trouver", async () => {
+        const { service, repository } = createTestEnvironment();
+
+        await service.updateTask("t1", {
+            title: "Nouveau titre"
+        });
+
+        expect(repository.getTasksByProjectId).toHaveBeenCalledTimes(2);
+        expect(repository.getTasksByProjectId).toHaveBeenNthCalledWith(1, "p1");
+        expect(repository.getTasksByProjectId).toHaveBeenNthCalledWith(2, "p2");
+    });
+
+    it("doit refuser un objet de modifications null", async () => {
+        const { service, repository } = createTestEnvironment();
+
+        await expect(service.updateTask("t1", null))
+            .rejects.toThrow("Les modifications fournies sont invalides.");
+
+        expect(repository.updateTask).not.toHaveBeenCalled();
+    });
+
+    it("doit refuser un objet de modifications undefined", async () => {
+        const { service, repository } = createTestEnvironment();
+
+        await expect(service.updateTask("t1", undefined))
+            .rejects.toThrow("Les modifications fournies sont invalides.");
+
+        expect(repository.updateTask).not.toHaveBeenCalled();
+    });
+
+    it("doit refuser un tableau de modifications", async () => {
+        const { service, repository } = createTestEnvironment();
+
+        await expect(service.updateTask("t1", []))
+            .rejects.toThrow("Les modifications fournies sont invalides.");
+
+        expect(repository.updateTask).not.toHaveBeenCalled();
+    });
+
+    it("doit refuser une chaîne de modifications", async () => {
+        const { service, repository } = createTestEnvironment();
+
+        await expect(service.updateTask("t1", "titre"))
+            .rejects.toThrow("Les modifications fournies sont invalides.");
+
+        expect(repository.updateTask).not.toHaveBeenCalled();
+    });
+
+    it("doit accepter un objet de modifications vide", async () => {
+        const { service, repository, task } = createTestEnvironment();
+
+        const updatedTask = await service.updateTask("t1", {});
+
+        expect(updatedTask).toEqual(task);
+        expect(repository.updateTask).toHaveBeenCalledOnce();
     });
 
     it("doit refuser un titre invalide", async () => {
@@ -86,7 +147,7 @@ describe("Modification des tâches dans le service", () => {
 
         await expect(
             service.updateTask("t1", { title: "   " })
-        ).rejects.toThrow();
+        ).rejects.toThrow("Le titre de la tâche est obligatoire.");
 
         expect(repository.updateTask).not.toHaveBeenCalled();
     });
@@ -96,7 +157,7 @@ describe("Modification des tâches dans le service", () => {
 
         await expect(
             service.updateTask("t1", { dueDate: "2026-02-30" })
-        ).rejects.toThrow();
+        ).rejects.toThrow("La date d'échéance n'est pas valide.");
 
         expect(repository.updateTask).not.toHaveBeenCalled();
     });
@@ -106,12 +167,14 @@ describe("Modification des tâches dans le service", () => {
 
         await expect(
             service.updateTask("t1", { projectId: "inexistant" })
-        ).rejects.toThrow();
+        ).rejects.toThrow(
+            "Le nouveau projet associé à cette tâche n'existe pas."
+        );
 
         expect(repository.updateTask).not.toHaveBeenCalled();
     });
 
-    it("doit refuser la modification d'une tâche inexistante", async () => {
+    it("doit refuser la modification d'une tâche inexistante après avoir parcouru tous les projets", async () => {
         const { service, repository } = createTestEnvironment();
 
         repository.getTasksByProjectId.mockResolvedValue([]);
@@ -120,8 +183,9 @@ describe("Modification des tâches dans le service", () => {
             service.updateTask("inexistant", {
                 title: "Nouveau titre"
             })
-        ).rejects.toThrow();
+        ).rejects.toThrow("La tâche à modifier n'existe pas.");
 
+        expect(repository.getTasksByProjectId).toHaveBeenCalledTimes(2);
         expect(repository.updateTask).not.toHaveBeenCalled();
     });
 });

@@ -36,9 +36,7 @@ describe("Gestion de l'achèvement des tâches", () => {
     });
 
     it("doit marquer une tâche comme terminée", async () => {
-        await service.updateTask(task.id, {
-            completed: true
-        });
+        await service.setTaskCompleted(task.id, true);
 
         const tasks = await repository.getTasksByProjectId(project.id);
 
@@ -46,13 +44,8 @@ describe("Gestion de l'achèvement des tâches", () => {
     });
 
     it("doit permettre de remettre une tâche terminée à faire", async () => {
-        await service.updateTask(task.id, {
-            completed: true
-        });
-
-        await service.updateTask(task.id, {
-            completed: false
-        });
+        await service.setTaskCompleted(task.id, true);
+        await service.setTaskCompleted(task.id, false);
 
         const tasks = await repository.getTasksByProjectId(project.id);
 
@@ -61,9 +54,7 @@ describe("Gestion de l'achèvement des tâches", () => {
 
     it("doit refuser une valeur d'achèvement qui n'est pas booléenne", async () => {
         await expect(
-            service.updateTask(task.id, {
-                completed: "oui"
-            })
+            service.setTaskCompleted(task.id, "oui")
         ).rejects.toThrow(
             "L'état d'achèvement doit être booléen."
         );
@@ -71,5 +62,27 @@ describe("Gestion de l'achèvement des tâches", () => {
         const tasks = await repository.getTasksByProjectId(project.id);
 
         expect(tasks[0].completed).toBe(false);
+    });
+
+    it("doit refuser une valeur null pour l'achèvement", async () => {
+        await expect(
+            service.setTaskCompleted(task.id, null)
+        ).rejects.toThrow(
+            "L'état d'achèvement doit être booléen."
+        );
+    });
+
+    it("doit refuser une valeur numérique pour l'achèvement", async () => {
+        await expect(
+            service.setTaskCompleted(task.id, 1)
+        ).rejects.toThrow(
+            "L'état d'achèvement doit être booléen."
+        );
+    });
+
+    it("doit refuser l'achèvement d'une tâche inexistante", async () => {
+        await expect(
+            service.setTaskCompleted("inexistante", true)
+        ).rejects.toThrow("La tâche à modifier n'existe pas.");
     });
 });
