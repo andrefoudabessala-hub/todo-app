@@ -23,13 +23,8 @@ const TASK_TITLE_INPUT = "#task-title";
 Given(
     "je suis sur la page de gestion des projets",
     async function () {
-        await expect(
-            this.page.locator("#projects-section")
-        ).toBeVisible();
-
-        await expect(
-            this.page.locator(PROJECT_NAME_INPUT)
-        ).toBeVisible();
+        await expect(this.page.locator("#projects-section")).toBeVisible();
+        await expect(this.page.locator(PROJECT_NAME_INPUT)).toBeVisible();
     }
 );
 
@@ -41,9 +36,7 @@ Given(
 When(
     "je saisis le nom {string}",
     async function (projectName) {
-        await this.page
-            .locator(PROJECT_NAME_INPUT)
-            .fill(projectName);
+        await this.page.locator(PROJECT_NAME_INPUT).fill(projectName);
     }
 );
 
@@ -56,9 +49,8 @@ When(
             .locator('button[type="submit"]')
             .click();
 
-        await expect(
-            this.page.locator(PROJECT_LIST)
-        ).toContainText("Projet INF563");
+        await expect(this.page.locator(PROJECT_LIST))
+            .toContainText("Projet INF563");
     }
 );
 
@@ -87,9 +79,7 @@ Then(
 Given(
     "un projet nommé {string} existe",
     async function (projectName) {
-        await this.page
-            .locator(PROJECT_NAME_INPUT)
-            .fill(projectName);
+        await this.page.locator(PROJECT_NAME_INPUT).fill(projectName);
 
         await this.page
             .locator(PROJECT_FORM)
@@ -132,14 +122,11 @@ When(
         });
 
         await projectItem
-            .getByRole("button", {
-                name: "Modifier"
-            })
+            .getByRole("button", { name: "Modifier" })
             .click();
 
-        await expect(
-            this.page.locator(`${PROJECT_LIST} li`)
-        ).toContainText(newName);
+        await expect(this.page.locator(`${PROJECT_LIST} li`))
+            .toContainText(newName);
     }
 );
 
@@ -196,14 +183,11 @@ When(
         });
 
         await projectItem
-            .getByRole("button", {
-                name: "Supprimer"
-            })
+            .getByRole("button", { name: "Supprimer" })
             .click();
 
-        await expect(
-            this.page.locator(`${PROJECT_LIST} li`)
-        ).toHaveCount(0);
+        await expect(this.page.locator(`${PROJECT_LIST} li`))
+            .toHaveCount(0);
     }
 );
 
@@ -233,9 +217,8 @@ When(
     async function () {
         await this.page.reload();
 
-        await expect(
-            this.page.locator("#projects-section")
-        ).toBeVisible();
+        await expect(this.page.locator("#projects-section"))
+            .toBeVisible();
     }
 );
 
@@ -269,16 +252,12 @@ When(
         );
 
         await expect(projectNameElement).toBeVisible();
-
         await projectNameElement.click();
 
-        await expect(
-            this.page.locator("#task-content")
-        ).toBeVisible();
+        await expect(this.page.locator("#task-content")).toBeVisible();
 
-        await expect(
-            this.page.locator("#selected-project-name")
-        ).toHaveText(projectName);
+        await expect(this.page.locator("#selected-project-name"))
+            .toHaveText(projectName);
     }
 );
 
@@ -290,22 +269,172 @@ When(
 When(
     "je crée une tâche intitulée {string}",
     async function (taskTitle) {
-        await expect(
-            this.page.locator(TASK_FORM)
-        ).toBeVisible();
+        await expect(this.page.locator(TASK_FORM)).toBeVisible();
 
-        await this.page
-            .locator(TASK_TITLE_INPUT)
-            .fill(taskTitle);
+        await this.page.locator(TASK_TITLE_INPUT).fill(taskTitle);
 
         await this.page
             .locator(TASK_FORM)
             .locator('button[type="submit"]')
             .click();
 
-        await expect(
-            this.page.locator(TASK_LIST)
-        ).toContainText(taskTitle);
+        await expect(this.page.locator(TASK_LIST))
+            .toContainText(taskTitle);
+    }
+);
+
+
+// ========================================
+// MODIFICATION D'UNE TÂCHE
+// ========================================
+
+When(
+    "je modifie la tâche {string} avec le titre {string} et la description {string}",
+    async function (oldTitle, newTitle, newDescription) {
+        const taskItem = this.page
+            .locator(`${TASK_LIST} li`)
+            .filter({
+                has: this.page.locator("strong", {
+                    hasText: oldTitle
+                })
+            });
+
+        await expect(taskItem).toHaveCount(1);
+
+        const dialogHandler = async dialog => {
+
+            if (dialog.type() === "alert") {
+                await dialog.accept();
+                return;
+            }
+
+            if (
+                dialog.type() === "prompt" &&
+                dialog.message() === "Nouveau titre :"
+            ) {
+                await dialog.accept(newTitle);
+                return;
+            }
+
+            if (
+                dialog.type() === "prompt" &&
+                dialog.message() === "Nouvelle description :"
+            ) {
+                await dialog.accept(newDescription);
+                return;
+            }
+
+            await dialog.dismiss();
+
+            throw new Error(
+                `Dialogue inattendu : ${dialog.type()} - ${dialog.message()}`
+            );
+        };
+
+        this.page.on("dialog", dialogHandler);
+
+        try {
+            await taskItem
+                .getByRole("button", { name: "Modifier" })
+                .click();
+
+            const updatedTask = this.page
+                .locator(`${TASK_LIST} li`)
+                .filter({
+                    has: this.page.locator("strong", {
+                        hasText: newTitle
+                    })
+                });
+
+            await expect(updatedTask).toHaveCount(1);
+
+            await expect(updatedTask.locator("strong"))
+                .toHaveText(newTitle);
+
+            await expect(updatedTask.locator("p"))
+                .toHaveText(newDescription);
+
+        } finally {
+            this.page.off("dialog", dialogHandler);
+        }
+    }
+);
+
+
+Then(
+    "la tâche {string} doit afficher le titre {string} et la description {string}",
+    async function (oldTitle, newTitle, newDescription) {
+        const taskItem = this.page
+            .locator(`${TASK_LIST} li`)
+            .filter({
+                has: this.page.locator("strong", {
+                    hasText: newTitle
+                })
+            });
+
+        await expect(taskItem).toHaveCount(1);
+
+        await expect(taskItem.locator("strong"))
+            .toHaveText(newTitle);
+
+        await expect(taskItem.locator("p"))
+            .toHaveText(newDescription);
+
+        const oldTask = this.page
+            .locator(`${TASK_LIST} li`)
+            .filter({
+                has: this.page.locator("strong", {
+                    hasText: oldTitle
+                })
+            });
+
+        await expect(oldTask).toHaveCount(0);
+    }
+);
+
+
+// ========================================
+// VALIDATION D'UNE TÂCHE
+// ========================================
+
+When(
+    "je marque la tâche {string} comme terminée",
+    async function (taskTitle) {
+        const taskItem = this.page
+            .locator(`${TASK_LIST} li`)
+            .filter({
+                has: this.page.locator("strong", {
+                    hasText: taskTitle
+                })
+            });
+
+        await expect(taskItem).toHaveCount(1);
+
+        const checkbox = taskItem.locator('input[type="checkbox"]');
+
+        await expect(checkbox).toBeVisible();
+        await checkbox.check();
+        await expect(checkbox).toBeChecked();
+    }
+);
+
+
+Then(
+    "la tâche {string} doit être marquée comme terminée",
+    async function (taskTitle) {
+        const taskItem = this.page
+            .locator(`${TASK_LIST} li`)
+            .filter({
+                has: this.page.locator("strong", {
+                    hasText: taskTitle
+                })
+            });
+
+        await expect(taskItem).toHaveCount(1);
+
+        const checkbox = taskItem.locator('input[type="checkbox"]');
+
+        await expect(checkbox).toBeChecked();
     }
 );
 

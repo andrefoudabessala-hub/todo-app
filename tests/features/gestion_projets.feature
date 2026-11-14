@@ -35,3 +35,20 @@ Fonctionnalité: Gestion des projets et des tâches
     Quand je recharge la page
     Et que je sélectionne le projet "Projet INF563"
     Alors la tâche "Réaliser les tests BDD" doit toujours apparaître dans la liste
+
+  Scénario: Modifier le titre et la description d'une tâche
+    Étant donné qu'un projet nommé "Projet INF563" existe
+    Quand je sélectionne le projet "Projet INF563"
+    Et que je crée une tâche intitulée "Réaliser les tests BDD"
+    Et que je modifie la tâche "Réaliser les tests BDD" avec le titre "Valider les tests de modification" et la description "Vérifier la mise à jour du titre et de la description."
+    Alors la tâche "Réaliser les tests BDD" doit afficher le titre "Valider les tests de modification" et la description "Vérifier la mise à jour du titre et de la description."
+
+  Scénario: Marquer une tâche comme terminée et conserver son état
+    Étant donné qu'un projet nommé "Projet INF563" existe
+    Quand je sélectionne le projet "Projet INF563"
+    Et que je crée une tâche intitulée "Réaliser les tests de validation"
+    Et que je marque la tâche "Réaliser les tests de validation" comme terminée
+    Alors la tâche "Réaliser les tests de validation" doit être marquée comme terminée
+    Quand je recharge la page
+    Et que je sélectionne le projet "Projet INF563"
+    Alors la tâche "Réaliser les tests de validation" doit être marquée comme terminée
