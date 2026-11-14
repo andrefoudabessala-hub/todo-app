@@ -3,7 +3,8 @@ import {
     BeforeAll,
     AfterAll,
     Before,
-    After
+    After,
+    setDefaultTimeout
 } from "@cucumber/cucumber";
 
 import { chromium } from "@playwright/test";
@@ -21,6 +22,10 @@ const srcDirectory = path.join(projectRoot, "src");
 
 const PORT = 4173;
 const BASE_URL = `http://127.0.0.1:${PORT}`;
+
+// Laisse à Playwright le temps de terminer ses attentes
+// sans être interrompu prématurément par Cucumber.
+setDefaultTimeout(15000);
 
 let server;
 let browser;
