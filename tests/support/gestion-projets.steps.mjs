@@ -411,9 +411,15 @@ When(
         await expect(taskItem).toHaveCount(1);
 
         const checkbox = taskItem.locator('input[type="checkbox"]');
+        const statusLabel = taskItem.locator("label");
 
         await expect(checkbox).toBeVisible();
+
         await checkbox.check();
+
+        // Attendre la fin de l'enregistrement et du réaffichage.
+        await expect(statusLabel).toHaveText("Terminée");
+
         await expect(checkbox).toBeChecked();
     }
 );
