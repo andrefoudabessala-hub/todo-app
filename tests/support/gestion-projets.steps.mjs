@@ -440,6 +440,54 @@ Then(
 
 
 // ========================================
+// REMISE D'UNE TÂCHE À FAIRE
+// ========================================
+
+When(
+    "je remets la tâche {string} à faire",
+    async function (taskTitle) {
+        const taskItem = this.page
+            .locator(`${TASK_LIST} li`)
+            .filter({
+                has: this.page.locator("strong", {
+                    hasText: taskTitle
+                })
+            });
+
+        await expect(taskItem).toHaveCount(1);
+
+        const checkbox = taskItem.locator('input[type="checkbox"]');
+
+        await expect(checkbox).toBeChecked();
+
+        await checkbox.uncheck();
+
+        await expect(checkbox).not.toBeChecked();
+    }
+);
+
+
+Then(
+    "la tâche {string} ne doit plus être marquée comme terminée",
+    async function (taskTitle) {
+        const taskItem = this.page
+            .locator(`${TASK_LIST} li`)
+            .filter({
+                has: this.page.locator("strong", {
+                    hasText: taskTitle
+                })
+            });
+
+        await expect(taskItem).toHaveCount(1);
+
+        const checkbox = taskItem.locator('input[type="checkbox"]');
+
+        await expect(checkbox).not.toBeChecked();
+    }
+);
+
+
+// ========================================
 // PERSISTANCE DES TÂCHES
 // ========================================
 

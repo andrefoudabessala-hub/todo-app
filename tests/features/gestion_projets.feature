@@ -52,3 +52,11 @@ Fonctionnalité: Gestion des projets et des tâches
     Quand je recharge la page
     Et que je sélectionne le projet "Projet INF563"
     Alors la tâche "Réaliser les tests de validation" doit être marquée comme terminée
+
+  Scénario: Remettre une tâche terminée à faire
+    Étant donné qu'un projet nommé "Projet INF563" existe
+    Quand je sélectionne le projet "Projet INF563"
+    Et que je crée une tâche intitulée "Préparer le rapport INF563"
+    Et que je marque la tâche "Préparer le rapport INF563" comme terminée
+    Et que je remets la tâche "Préparer le rapport INF563" à faire
+    Alors la tâche "Préparer le rapport INF563" ne doit plus être marquée comme terminée
