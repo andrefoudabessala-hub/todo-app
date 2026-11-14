@@ -14,18 +14,22 @@ const taskList = document.getElementById("task-list");
 
 let selectedProjectId = null;
 
+// Numéro de version permettant d'ignorer les anciens affichages.
+let taskDisplayVersion = 0;
+
 // ========================================
 // SÉLECTION D'UN PROJET
 // ========================================
 
-function selectProject(project) {
+async function selectProject(project) {
     selectedProjectId = project.id;
 
     noProjectMessage.style.display = "none";
     taskContent.style.display = "block";
     selectedProjectName.textContent = project.name;
 
-    displayTasks();
+    // Attendre le chargement complet des tâches.
+    await displayTasks();
 }
 
 // ========================================
@@ -33,16 +37,27 @@ function selectProject(project) {
 // ========================================
 
 async function displayTasks() {
+    const currentVersion = ++taskDisplayVersion;
+    const currentProjectId = selectedProjectId;
+
     taskList.innerHTML = "";
 
-    if (selectedProjectId === null) {
+    if (currentProjectId === null) {
         return;
     }
 
     const [tasks, projects] = await Promise.all([
-        getTasksByProjectId(selectedProjectId),
+        getTasksByProjectId(currentProjectId),
         getProjects()
     ]);
+
+    // Ignorer un résultat devenu obsolète.
+    if (
+        currentVersion !== taskDisplayVersion ||
+        currentProjectId !== selectedProjectId
+    ) {
+        return;
+    }
 
     tasks.forEach((task) => {
         const taskItem = document.createElement("li");
@@ -73,18 +88,28 @@ async function displayTasks() {
             : "Non terminée";
 
         completionCheckbox.addEventListener("change", async () => {
+            const newCompletedState = completionCheckbox.checked;
+
+            // Empêcher plusieurs modifications simultanées.
+            completionCheckbox.disabled = true;
+
             try {
                 await updateTask(
                     task.id,
                     task.title,
                     task.description,
-                    completionCheckbox.checked,
+                    newCompletedState,
                     task.projectId
                 );
 
+                // Attendre la relecture de l'état enregistré.
                 await displayTasks();
             } catch (error) {
                 console.error(error);
+
+                completionCheckbox.checked = !newCompletedState;
+                completionCheckbox.disabled = false;
+
                 alert("Impossible de modifier le statut de la tâche.");
             }
         });
@@ -261,8 +286,13 @@ async function displayProjects() {
         projectName.textContent = project.name;
         projectName.style.cursor = "pointer";
 
-        projectName.addEventListener("click", () => {
-            selectProject(project);
+        projectName.addEventListener("click", async () => {
+            try {
+                await selectProject(project);
+            } catch (error) {
+                console.error(error);
+                alert("Impossible de charger les tâches du projet.");
+            }
         });
 
         // Modifier le projet
@@ -321,6 +351,8 @@ async function displayProjects() {
 
                 if (selectedProjectId === project.id) {
                     selectedProjectId = null;
+                    taskDisplayVersion++;
+
                     taskContent.style.display = "none";
                     noProjectMessage.style.display = "block";
                     taskList.innerHTML = "";
