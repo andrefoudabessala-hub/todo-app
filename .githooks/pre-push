@@ -1,0 +1,34 @@
+
+#!/bin/sh
+
+echo ""
+echo "=========================================="
+echo " VERIFICATION AVANT ENVOI SUR LE DEPOT"
+echo "=========================================="
+echo ""
+
+if command -v npm.cmd >/dev/null 2>&1; then
+    NPM_COMMAND="npm.cmd"
+elif command -v npm >/dev/null 2>&1; then
+    NPM_COMMAND="npm"
+else
+    echo "ERREUR : npm est introuvable."
+    exit 1
+fi
+
+"$NPM_COMMAND" run test:pre-push
+
+RESULT=$?
+
+if [ "$RESULT" -ne 0 ]; then
+    echo ""
+    echo "ECHEC : envoi Git annule."
+    exit 1
+fi
+
+echo ""
+echo "SUCCES : toutes les verifications sont passees."
+echo "L'envoi Git peut continuer."
+echo ""
+
+exit 0

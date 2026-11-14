@@ -1,3 +1,4 @@
+
 {
   "name": "todo-app",
   "version": "1.0.0",
@@ -6,7 +7,8 @@
   "scripts": {
     "test": "cucumber-js tests/features --import tests/support/**/*.mjs",
     "test:features": "cucumber-js tests/features --import tests/support/**/*.mjs",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "test:pre-push": "npm run test:unit && npm run test:features"
   },
   "keywords": [],
   "author": "",
