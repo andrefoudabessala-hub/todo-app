@@ -1,0 +1,81 @@
+
+name: Verification continue
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests unitaires et BDD
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Installer les dependances
+        run: npm ci
+
+      - name: Executer les tests unitaires avec couverture
+        run: npm run test:unit:coverage
+
+      - name: Installer Chromium pour Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Executer les tests BDD
+        run: npm run test:features
+
+      - name: Archiver les rapports en cas d'echec
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapports-echec-tests
+          path: |
+            coverage/
+            reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  mutation:
+    name: Analyse de mutation Stryker
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Installer les dependances
+        run: npm ci
+
+      - name: Executer Stryker
+        run: npm run test:mutation
+
+      - name: Archiver les rapports Stryker
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapports-mutation
+          path: reports/mutation/
+          if-no-files-found: ignore
+          retention-days: 30

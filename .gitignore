@@ -1,13 +1,13 @@
-
-# Dépendances Node.js
+# Dependances Node.js
 node_modules/
 
-# Rapports et résultats de tests
+# Rapports et resultats de tests
 coverage/
 playwright-report/
 test-results/
+reports/mutation/
 
-# Fichiers système
+# Fichiers systeme
 .DS_Store
 Thumbs.db
 
