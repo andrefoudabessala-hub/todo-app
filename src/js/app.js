@@ -14,22 +14,19 @@ const taskList = document.getElementById("task-list");
 
 let selectedProjectId = null;
 
-
 // ========================================
 // SÉLECTION D'UN PROJET
 // ========================================
 
-async function selectProject(project) {
+function selectProject(project) {
     selectedProjectId = project.id;
 
     noProjectMessage.style.display = "none";
     taskContent.style.display = "block";
-
     selectedProjectName.textContent = project.name;
 
-    await displayTasks();
+    displayTasks();
 }
-
 
 // ========================================
 // AFFICHAGE DES TÂCHES
@@ -42,30 +39,29 @@ async function displayTasks() {
         return;
     }
 
-    const tasks = await getTasksByProjectId(selectedProjectId);
+    const [tasks, projects] = await Promise.all([
+        getTasksByProjectId(selectedProjectId),
+        getProjects()
+    ]);
 
-    tasks.forEach(function (task) {
-
+    tasks.forEach((task) => {
         const taskItem = document.createElement("li");
-        taskItem.classList.add("task-item");
+        taskItem.className = "task-item";
 
-        // Zone contenant le titre et la description
+        // Informations de la tâche
         const taskInformation = document.createElement("div");
-        taskInformation.classList.add("task-information");
 
-        const taskTitle = document.createElement("strong");
-        taskTitle.textContent = task.title;
+        const title = document.createElement("strong");
+        title.textContent = task.title;
 
-        const taskDescription = document.createElement("p");
-        taskDescription.textContent = task.description;
+        const description = document.createElement("p");
+        description.textContent = task.description || "";
 
-        taskInformation.appendChild(taskTitle);
-        taskInformation.appendChild(taskDescription);
+        taskInformation.appendChild(title);
+        taskInformation.appendChild(description);
 
-
-        // Zone contenant le statut
-        const taskStatusArea = document.createElement("div");
-        taskStatusArea.classList.add("task-status-area");
+        // Statut de la tâche
+        const statusContainer = document.createElement("div");
 
         const completionCheckbox = document.createElement("input");
         completionCheckbox.type = "checkbox";
@@ -76,7 +72,7 @@ async function displayTasks() {
             ? "Terminée"
             : "Non terminée";
 
-        completionCheckbox.addEventListener("change", async function () {
+        completionCheckbox.addEventListener("change", async () => {
             try {
                 await updateTask(
                     task.id,
@@ -87,29 +83,25 @@ async function displayTasks() {
                 );
 
                 await displayTasks();
-
             } catch (error) {
-                console.error("Erreur lors du changement de statut :", error);
+                console.error(error);
                 alert("Impossible de modifier le statut de la tâche.");
             }
         });
 
-        taskStatusArea.appendChild(completionCheckbox);
-        taskStatusArea.appendChild(statusLabel);
+        statusContainer.appendChild(completionCheckbox);
+        statusContainer.appendChild(statusLabel);
 
-
-        // Zone contenant les boutons d'action
+        // Actions sur la tâche
         const taskActions = document.createElement("div");
-        taskActions.classList.add("task-actions");
+        taskActions.className = "task-actions";
 
-
-        // Bouton de modification
+        // Modifier une tâche
         const editButton = document.createElement("button");
+        editButton.type = "button";
         editButton.textContent = "Modifier";
-        editButton.classList.add("edit-task-button");
 
-        editButton.addEventListener("click", async function () {
-
+        editButton.addEventListener("click", async () => {
             const newTitle = prompt(
                 "Nouveau titre :",
                 task.title
@@ -121,7 +113,7 @@ async function displayTasks() {
 
             const newDescription = prompt(
                 "Nouvelle description :",
-                task.description
+                task.description || ""
             );
 
             if (newDescription === null) {
@@ -131,8 +123,8 @@ async function displayTasks() {
             const trimmedTitle = newTitle.trim();
             const trimmedDescription = newDescription.trim();
 
-            if (trimmedTitle === "") {
-                alert("Le titre ne peut pas être vide.");
+            if (!trimmedTitle) {
+                alert("Le titre de la tâche est obligatoire.");
                 return;
             }
 
@@ -146,58 +138,110 @@ async function displayTasks() {
                 );
 
                 await displayTasks();
-
                 alert("Tâche modifiée avec succès !");
-
             } catch (error) {
-                console.error("Erreur lors de la modification :", error);
+                console.error(error);
                 alert("Impossible de modifier la tâche.");
             }
         });
 
-
-        // Bouton de suppression
+        // Supprimer une tâche
         const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
         deleteButton.textContent = "Supprimer";
-        deleteButton.classList.add("delete-task-button");
 
-        deleteButton.addEventListener("click", async function () {
-
-            const confirmation = confirm(
+        deleteButton.addEventListener("click", async () => {
+            const confirmed = confirm(
                 "Voulez-vous vraiment supprimer cette tâche ?"
             );
 
-            if (!confirmation) {
+            if (!confirmed) {
                 return;
             }
 
             try {
                 await deleteTask(task.id);
-
                 await displayTasks();
-
                 alert("Tâche supprimée avec succès !");
-
             } catch (error) {
-                console.error("Erreur lors de la suppression :", error);
+                console.error(error);
                 alert("Impossible de supprimer la tâche.");
             }
         });
 
+        // Déplacer une tâche vers un autre projet
+        const moveSelect = document.createElement("select");
+        moveSelect.className = "move-task-select";
+        moveSelect.setAttribute(
+            "aria-label",
+            `Déplacer la tâche ${task.title} vers un autre projet`
+        );
 
-        // Assemblage des boutons
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = "Déplacer vers un projet...";
+        defaultOption.disabled = true;
+        defaultOption.selected = true;
+
+        moveSelect.appendChild(defaultOption);
+
+        const destinationProjects = projects.filter(
+            (project) => project.id !== task.projectId
+        );
+
+        destinationProjects.forEach((project) => {
+            const option = document.createElement("option");
+            option.value = project.id;
+            option.textContent = project.name;
+
+            moveSelect.appendChild(option);
+        });
+
+        if (destinationProjects.length === 0) {
+            moveSelect.disabled = true;
+        }
+
+        moveSelect.addEventListener("change", async () => {
+            const newProjectId = Number(moveSelect.value);
+
+            if (
+                !Number.isInteger(newProjectId) ||
+                newProjectId <= 0 ||
+                newProjectId === task.projectId
+            ) {
+                return;
+            }
+
+            try {
+                await updateTask(
+                    task.id,
+                    task.title,
+                    task.description,
+                    task.completed,
+                    newProjectId
+                );
+
+                await displayTasks();
+
+                alert("Tâche déplacée avec succès !");
+            } catch (error) {
+                console.error(error);
+                alert("Impossible de déplacer la tâche.");
+                await displayTasks();
+            }
+        });
+
         taskActions.appendChild(editButton);
         taskActions.appendChild(deleteButton);
+        taskActions.appendChild(moveSelect);
 
-        // Assemblage complet de la tâche
         taskItem.appendChild(taskInformation);
-        taskItem.appendChild(taskStatusArea);
+        taskItem.appendChild(statusContainer);
         taskItem.appendChild(taskActions);
 
         taskList.appendChild(taskItem);
     });
 }
-
 
 // ========================================
 // AFFICHAGE DES PROJETS
@@ -208,32 +252,25 @@ async function displayProjects() {
 
     const projects = await getProjects();
 
-    projects.forEach(function (project) {
-
+    projects.forEach((project) => {
         const projectItem = document.createElement("li");
+        projectItem.className = "project-item";
 
+        // Sélectionner le projet
         const projectName = document.createElement("span");
         projectName.textContent = project.name;
         projectName.style.cursor = "pointer";
 
-        // Sélectionner un projet
-        projectName.addEventListener("click", async function () {
-            try {
-                await selectProject(project);
-
-            } catch (error) {
-                console.error("Erreur lors de la sélection :", error);
-                alert("Impossible d'afficher les tâches de ce projet.");
-            }
+        projectName.addEventListener("click", () => {
+            selectProject(project);
         });
 
-
-        // Bouton de modification du projet
+        // Modifier le projet
         const editButton = document.createElement("button");
+        editButton.type = "button";
         editButton.textContent = "Modifier";
 
-        editButton.addEventListener("click", async function () {
-
+        editButton.addEventListener("click", async () => {
             const newName = prompt(
                 "Nouveau nom du projet :",
                 project.name
@@ -245,8 +282,8 @@ async function displayProjects() {
 
             const trimmedName = newName.trim();
 
-            if (trimmedName === "") {
-                alert("Le nom du projet ne peut pas être vide.");
+            if (!trimmedName) {
+                alert("Le nom du projet est obligatoire.");
                 return;
             }
 
@@ -258,27 +295,24 @@ async function displayProjects() {
                 }
 
                 await displayProjects();
-
                 alert("Projet modifié avec succès !");
-
             } catch (error) {
-                console.error("Erreur lors de la modification :", error);
+                console.error(error);
                 alert("Impossible de modifier le projet.");
             }
         });
 
-
-        // Bouton de suppression du projet
+        // Supprimer le projet
         const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
         deleteButton.textContent = "Supprimer";
 
-        deleteButton.addEventListener("click", async function () {
-
-            const confirmation = confirm(
+        deleteButton.addEventListener("click", async () => {
+            const confirmed = confirm(
                 "Voulez-vous vraiment supprimer ce projet ?"
             );
 
-            if (!confirmation) {
+            if (!confirmed) {
                 return;
             }
 
@@ -287,25 +321,19 @@ async function displayProjects() {
 
                 if (selectedProjectId === project.id) {
                     selectedProjectId = null;
-
                     taskContent.style.display = "none";
                     noProjectMessage.style.display = "block";
-
                     taskList.innerHTML = "";
                 }
 
                 await displayProjects();
-
                 alert("Projet supprimé avec succès !");
-
             } catch (error) {
-                console.error("Erreur lors de la suppression :", error);
+                console.error(error);
                 alert("Impossible de supprimer le projet.");
             }
         });
 
-
-        // Assemblage des éléments du projet
         projectItem.appendChild(projectName);
         projectItem.appendChild(editButton);
         projectItem.appendChild(deleteButton);
@@ -314,18 +342,17 @@ async function displayProjects() {
     });
 }
 
-
 // ========================================
 // AJOUT D'UN PROJET
 // ========================================
 
-projectForm.addEventListener("submit", async function (event) {
+projectForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const projectName = projectNameInput.value.trim();
 
-    if (projectName === "") {
-        alert("Veuillez saisir le nom du projet.");
+    if (!projectName) {
+        alert("Le nom du projet est obligatoire.");
         return;
     }
 
@@ -335,35 +362,33 @@ projectForm.addEventListener("submit", async function (event) {
         projectNameInput.value = "";
 
         await displayProjects();
-
-        alert("Projet ajouté avec succès !");
-
     } catch (error) {
-        console.error("Erreur lors de l'ajout du projet :", error);
+        console.error(error);
         alert("Impossible d'ajouter le projet.");
     }
 });
-
 
 // ========================================
 // AJOUT D'UNE TÂCHE
 // ========================================
 
-taskForm.addEventListener("submit", async function (event) {
+taskForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
+    if (selectedProjectId === null) {
+        alert("Veuillez sélectionner un projet.");
+        return;
+    }
+
+    const title = taskTitleInput.value.trim();
+    const description = taskDescriptionInput.value.trim();
+
+    if (!title) {
+        alert("Le titre de la tâche est obligatoire.");
+        return;
+    }
+
     try {
-        if (selectedProjectId === null) {
-            throw new Error("Aucun projet sélectionné.");
-        }
-
-        const title = taskTitleInput.value.trim();
-        const description = taskDescriptionInput.value.trim();
-
-        if (title === "") {
-            throw new Error("Le titre de la tâche est obligatoire.");
-        }
-
         await addTask(
             title,
             description,
@@ -374,30 +399,23 @@ taskForm.addEventListener("submit", async function (event) {
         taskDescriptionInput.value = "";
 
         await displayTasks();
-
-        alert("Tâche ajoutée avec succès !");
-
     } catch (error) {
-        console.error("Erreur lors de l'ajout de la tâche :", error);
-        alert("Échec de l'ajout : " + error.message);
+        console.error(error);
+        alert("Impossible d'ajouter la tâche.");
     }
 });
 
-
 // ========================================
-// INITIALISATION DE L'APPLICATION
+// INITIALISATION
 // ========================================
 
 async function initializeApplication() {
     try {
         await openDatabase();
-
         await displayProjects();
-
     } catch (error) {
-        console.error("Erreur d'initialisation :", error);
-
-        alert("Impossible de démarrer l'application. Vérifiez la base de données.");
+        console.error(error);
+        alert("Impossible d'initialiser l'application.");
     }
 }
 
