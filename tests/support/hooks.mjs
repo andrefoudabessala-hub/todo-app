@@ -1,3 +1,4 @@
+
 import {
     BeforeAll,
     AfterAll,
@@ -11,7 +12,6 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { lookup } from "node:dns/promises";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,6 +24,11 @@ const BASE_URL = `http://127.0.0.1:${PORT}`;
 
 let server;
 let browser;
+
+
+// ========================================
+// TYPES DE CONTENU
+// ========================================
 
 function getContentType(filePath) {
     const extension = path.extname(filePath).toLowerCase();
@@ -42,22 +47,56 @@ function getContentType(filePath) {
     return types[extension] || "application/octet-stream";
 }
 
+
+// ========================================
+// SERVEUR HTTP LOCAL
+// ========================================
+
 function startServer() {
     return new Promise((resolve, reject) => {
         server = http.createServer((request, response) => {
-            let requestPath = decodeURIComponent(
+
+            const requestPath = decodeURIComponent(
                 new URL(request.url, BASE_URL).pathname
             );
 
-            if (requestPath === "/") {
-                requestPath = "/index.html";
+            // Page vide sur la même origine que l'application.
+            // Elle permet de supprimer IndexedDB avant
+            // le chargement des scripts de l'application.
+            if (requestPath === "/__bdd_empty") {
+                response.writeHead(200, {
+                    "Content-Type": "text/html; charset=utf-8"
+                });
+
+                response.end(`
+                    <!DOCTYPE html>
+                    <html lang="fr">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>Préparation des tests BDD</title>
+                    </head>
+                    <body></body>
+                    </html>
+                `);
+
+                return;
             }
 
-            const filePath = path.normalize(
-                path.join(srcDirectory, requestPath)
+            let fileRequestPath = requestPath;
+
+            if (fileRequestPath === "/") {
+                fileRequestPath = "/index.html";
+            }
+
+            const filePath = path.resolve(
+                srcDirectory,
+                `.${fileRequestPath}`
             );
 
-            if (!filePath.startsWith(srcDirectory)) {
+            if (
+                filePath !== srcDirectory &&
+                !filePath.startsWith(srcDirectory + path.sep)
+            ) {
                 response.writeHead(403);
                 response.end("Forbidden");
                 return;
@@ -86,6 +125,11 @@ function startServer() {
     });
 }
 
+
+// ========================================
+// ARRÊT DU SERVEUR
+// ========================================
+
 function stopServer() {
     return new Promise((resolve, reject) => {
         if (!server) {
@@ -104,6 +148,11 @@ function stopServer() {
     });
 }
 
+
+// ========================================
+// INITIALISATION GLOBALE
+// ========================================
+
 BeforeAll(async function () {
     await startServer();
 
@@ -112,7 +161,13 @@ BeforeAll(async function () {
     });
 });
 
+
+// ========================================
+// PRÉPARATION DE CHAQUE SCÉNARIO
+// ========================================
+
 Before(async function () {
+    // Nouveau contexte isolé pour chaque scénario.
     this.context = await browser.newContext({
         locale: "fr-FR",
         timezoneId: "Africa/Douala"
@@ -120,24 +175,45 @@ Before(async function () {
 
     this.page = await this.context.newPage();
 
-    // Chaque scénario commence avec une base IndexedDB vide.
-    await this.page.goto(BASE_URL);
+    // On ouvre une page vide, sans charger l'application.
+    await this.page.goto(`${BASE_URL}/__bdd_empty`);
 
+    // On supprime la base avant toute ouverture par l'application.
     await this.page.evaluate(() => {
         return new Promise((resolve, reject) => {
             const request = indexedDB.deleteDatabase("TodoDB");
 
-            request.onsuccess = () => resolve();
-            request.onerror = () => reject(request.error);
-            request.onblocked = () => resolve();
+            request.onsuccess = () => {
+                resolve();
+            };
+
+            request.onerror = () => {
+                reject(
+                    request.error ||
+                    new Error("Impossible de supprimer la base IndexedDB.")
+                );
+            };
+
+            request.onblocked = () => {
+                reject(
+                    new Error(
+                        "La suppression de TodoDB est bloquée par une connexion ouverte."
+                    )
+                );
+            };
         });
     });
 
-    // Rechargement après suppression de la base.
-    await this.page.reload();
+    // L'application est maintenant chargée avec une base vierge.
+    await this.page.goto(BASE_URL);
 
     await this.page.locator("#projects-section").waitFor();
 });
+
+
+// ========================================
+// NETTOYAGE APRÈS CHAQUE SCÉNARIO
+// ========================================
 
 After(async function () {
     if (this.page) {
@@ -148,6 +224,11 @@ After(async function () {
         await this.context.close();
     }
 });
+
+
+// ========================================
+// FERMETURE GLOBALE
+// ========================================
 
 AfterAll(async function () {
     if (browser) {

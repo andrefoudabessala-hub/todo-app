@@ -1,3 +1,4 @@
+
 import {
     Given,
     When,
@@ -9,6 +10,10 @@ import { expect } from "@playwright/test";
 const PROJECT_LIST = "#project-list";
 const PROJECT_FORM = "#project-form";
 const PROJECT_NAME_INPUT = "#project-name";
+
+const TASK_LIST = "#task-list";
+const TASK_FORM = "#task-form";
+const TASK_TITLE_INPUT = "#task-title";
 
 
 // ========================================
@@ -70,7 +75,6 @@ Then(
             });
 
         await expect(projectItem).toHaveCount(1);
-
         await expect(projectItem).toContainText(projectName);
     }
 );
@@ -106,7 +110,7 @@ Given(
 
 
 // ========================================
-// MODIFICATION
+// MODIFICATION D'UN PROJET
 // ========================================
 
 When(
@@ -158,7 +162,7 @@ Then(
 
 
 // ========================================
-// SUPPRESSION
+// SUPPRESSION D'UN PROJET
 // ========================================
 
 When(
@@ -216,5 +220,112 @@ Then(
             });
 
         await expect(projectItem).toHaveCount(0);
+    }
+);
+
+
+// ========================================
+// PERSISTANCE DES PROJETS
+// ========================================
+
+When(
+    "je recharge la page",
+    async function () {
+        await this.page.reload();
+
+        await expect(
+            this.page.locator("#projects-section")
+        ).toBeVisible();
+    }
+);
+
+
+Then(
+    "le projet {string} doit toujours apparaître dans la liste",
+    async function (projectName) {
+        const projectItem = this.page
+            .locator(`${PROJECT_LIST} li`)
+            .filter({
+                has: this.page.locator("span", {
+                    hasText: projectName
+                })
+            });
+
+        await expect(projectItem).toHaveCount(1);
+    }
+);
+
+
+// ========================================
+// SÉLECTION D'UN PROJET
+// ========================================
+
+When(
+    "je sélectionne le projet {string}",
+    async function (projectName) {
+        const projectNameElement = this.page.getByText(
+            projectName,
+            { exact: true }
+        );
+
+        await expect(projectNameElement).toBeVisible();
+
+        await projectNameElement.click();
+
+        await expect(
+            this.page.locator("#task-content")
+        ).toBeVisible();
+
+        await expect(
+            this.page.locator("#selected-project-name")
+        ).toHaveText(projectName);
+    }
+);
+
+
+// ========================================
+// CRÉATION D'UNE TÂCHE
+// ========================================
+
+When(
+    "je crée une tâche intitulée {string}",
+    async function (taskTitle) {
+        await expect(
+            this.page.locator(TASK_FORM)
+        ).toBeVisible();
+
+        await this.page
+            .locator(TASK_TITLE_INPUT)
+            .fill(taskTitle);
+
+        await this.page
+            .locator(TASK_FORM)
+            .locator('button[type="submit"]')
+            .click();
+
+        await expect(
+            this.page.locator(TASK_LIST)
+        ).toContainText(taskTitle);
+    }
+);
+
+
+// ========================================
+// PERSISTANCE DES TÂCHES
+// ========================================
+
+Then(
+    "la tâche {string} doit toujours apparaître dans la liste",
+    async function (taskTitle) {
+        const taskItem = this.page
+            .locator(`${TASK_LIST} li`)
+            .filter({
+                has: this.page.locator("strong", {
+                    hasText: taskTitle
+                })
+            });
+
+        await expect(taskItem).toHaveCount(1);
+        await expect(taskItem).toContainText(taskTitle);
     }
 );
