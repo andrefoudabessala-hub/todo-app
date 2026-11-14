@@ -18,6 +18,54 @@ let selectedProjectId = null;
 let taskDisplayVersion = 0;
 
 // ========================================
+// TABLEAU DE BORD
+// ========================================
+
+async function updateDashboard(projects = null) {
+    const projectsCounter = document.getElementById("dashboard-projects");
+    const tasksCounter = document.getElementById("dashboard-tasks");
+    const completedCounter = document.getElementById("dashboard-completed");
+    const pendingCounter = document.getElementById("dashboard-pending");
+
+    // Préserver la compatibilité avec les tests
+    // qui ne possèdent pas les éléments du tableau de bord.
+    if (
+        !projectsCounter ||
+        !tasksCounter ||
+        !completedCounter ||
+        !pendingCounter
+    ) {
+        return;
+    }
+
+    try {
+        const currentProjects = projects ?? await getProjects();
+
+        const tasksByProject = await Promise.all(
+            currentProjects.map((project) =>
+                getTasksByProjectId(project.id)
+            )
+        );
+
+        const allTasks = tasksByProject.flat();
+
+        const completedTasks = allTasks.filter(
+            (task) => task.completed
+        ).length;
+
+        projectsCounter.textContent = currentProjects.length;
+        tasksCounter.textContent = allTasks.length;
+        completedCounter.textContent = completedTasks;
+        pendingCounter.textContent = allTasks.length - completedTasks;
+    } catch (error) {
+        console.error(
+            "Erreur lors de la mise à jour du tableau de bord :",
+            error
+        );
+    }
+}
+
+// ========================================
 // SÉLECTION D'UN PROJET
 // ========================================
 
@@ -28,7 +76,6 @@ async function selectProject(project) {
     taskContent.style.display = "block";
     selectedProjectName.textContent = project.name;
 
-    // Attendre le chargement complet des tâches.
     await displayTasks();
 }
 
@@ -58,6 +105,8 @@ async function displayTasks() {
     ) {
         return;
     }
+
+    await updateDashboard(projects);
 
     tasks.forEach((task) => {
         const taskItem = document.createElement("li");
@@ -90,7 +139,6 @@ async function displayTasks() {
         completionCheckbox.addEventListener("change", async () => {
             const newCompletedState = completionCheckbox.checked;
 
-            // Empêcher plusieurs modifications simultanées.
             completionCheckbox.disabled = true;
 
             try {
@@ -102,7 +150,6 @@ async function displayTasks() {
                     task.projectId
                 );
 
-                // Attendre la relecture de l'état enregistré.
                 await displayTasks();
             } catch (error) {
                 console.error(error);
@@ -276,6 +323,8 @@ async function displayProjects() {
     projectList.innerHTML = "";
 
     const projects = await getProjects();
+
+    await updateDashboard(projects);
 
     projects.forEach((project) => {
         const projectItem = document.createElement("li");

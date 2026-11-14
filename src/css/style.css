@@ -1,193 +1,647 @@
+
+/* ========================================
+   1. VARIABLES ET CONFIGURATION GENERALE
+======================================== */
+
+:root {
+    --primary: #3157d5;
+    --primary-dark: #2444b3;
+    --primary-light: #edf2ff;
+
+    --background: #f3f6fc;
+    --surface: #ffffff;
+
+    --text: #1e293b;
+    --text-light: #64748b;
+
+    --border: #e2e8f0;
+
+    --success: #15803d;
+    --success-light: #dcfce7;
+
+    --danger: #dc2626;
+    --danger-light: #fee2e2;
+
+    --warning: #d97706;
+    --warning-light: #fef3c7;
+
+    --shadow: 0 4px 20px rgba(30, 41, 59, 0.06);
+    --shadow-hover: 0 8px 25px rgba(30, 41, 59, 0.10);
+
+    --radius: 14px;
+}
+
 * {
     box-sizing: border-box;
 }
 
 body {
-    font-family: Arial, sans-serif;
     margin: 0;
-    background-color: #f4f6f8;
-    color: #222;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: var(--background);
+    color: var(--text);
+    line-height: 1.6;
 }
 
+/* ========================================
+   2. EN-TETE
+======================================== */
+
 header {
-    background-color: #263238;
+    background: linear-gradient(135deg, #1e3a8a, #3157d5);
     color: white;
-    padding: 30px;
+    padding: 42px 20px;
     text-align: center;
+    box-shadow: 0 4px 18px rgba(30, 58, 138, 0.15);
 }
 
 header h1 {
-    margin: 0 0 10px;
+    margin: 0 0 8px;
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
 }
 
 header p {
     margin: 0;
+    color: #dbeafe;
+    font-size: 15px;
 }
+
+/* ========================================
+   3. CONTENU PRINCIPAL
+======================================== */
 
 main {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    max-width: 1000px;
+    grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.4fr);
+    gap: 25px;
+
+    width: 100%;
+    max-width: 1200px;
+
     margin: 40px auto;
-    padding: 0 20px;
+    padding: 0 24px;
 }
 
 section {
-    background-color: white;
-    padding: 25px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    min-width: 0;
+    background: var(--surface);
+    padding: 28px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.2s ease;
+}
+
+section:hover {
+    box-shadow: var(--shadow-hover);
 }
 
 h2 {
-    margin-top: 0;
+    margin: 0 0 24px;
+    color: var(--text);
+    font-size: 21px;
+    font-weight: 700;
 }
+
+h3 {
+    margin: 0 0 22px;
+    color: var(--primary);
+    font-size: 19px;
+    font-weight: 700;
+}
+
+/* ========================================
+   4. TABLEAU DE BORD
+======================================== */
+
+#dashboard-section {
+    grid-column: 1 / -1;
+    padding: 25px;
+}
+
+#dashboard-section h2 {
+    margin-bottom: 20px;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.dashboard-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    min-width: 0;
+    padding: 21px;
+
+    background: #f8faff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    transition: transform 0.2s ease,
+                box-shadow 0.2s ease,
+                border-color 0.2s ease;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+    border-color: #c7d2fe;
+}
+
+.dashboard-label {
+    color: var(--text-light);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.dashboard-card strong {
+    color: var(--primary);
+    font-size: 32px;
+    line-height: 1.2;
+    font-weight: 700;
+}
+
+.dashboard-card:nth-child(3) strong {
+    color: var(--success);
+}
+
+.dashboard-card:nth-child(4) strong {
+    color: var(--warning);
+}
+
+.dashboard-card small {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+/* ========================================
+   5. FORMULAIRES
+======================================== */
 
 form {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
 }
 
-input {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+form label {
+    color: #334155;
+    font-size: 14px;
+    font-weight: 600;
 }
 
-button {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    background-color: #1976d2;
-    color: white;
+input[type="text"],
+textarea,
+select {
+    width: 100%;
+    padding: 12px 14px;
+
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text);
+
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+
+    outline: none;
+    transition: border-color 0.2s ease,
+                box-shadow 0.2s ease,
+                background 0.2s ease;
+}
+
+input[type="text"]:focus,
+textarea:focus,
+select:focus {
+    background: white;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(49, 87, 213, 0.12);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #94a3b8;
+}
+
+textarea {
+    min-height: 105px;
+    resize: vertical;
+}
+
+select {
     cursor: pointer;
-}
-
-button:hover {
-    background-color: #125ca8;
-}
-
-ul {
-    list-style: none;
-    padding: 0;
-}
-
-li {
-    padding: 12px;
-    margin-bottom: 8px;
-    background-color: #f1f3f4;
-    border-radius: 5px;
-}
-
-#project-list li {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
-#project-list li span {
-    flex: 1;
-}
-
-#project-list li button {
-    padding: 8px 12px;
-}
-
-/* Organisation de l'affichage des tâches */
-#task-list li {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 15px;
-    padding: 12px;
-}
-
-/* Le titre et la description occupent toute la largeur */
-#task-list li strong,
-#task-list li p {
-    flex-basis: 100%;
-    margin: 0;
-}
-
-/* Le statut reste proche de sa case à cocher */
-#task-list li label {
-    margin-right: auto;
-}
-
-/* Le bouton Modifier est placé à droite */
-#task-list li button {
-    margin-left: auto;
-    padding: 8px 16px;
 }
 
 /* ========================================
-   ORGANISATION DES TÂCHES
+   6. BOUTONS
 ======================================== */
 
-#task-list .task-item {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 15px;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-}
+button {
+    padding: 11px 16px;
 
-/* Zone titre et description */
-#task-list .task-information {
-    flex: 1 1 100%;
-}
+    border: none;
+    border-radius: 9px;
 
-#task-list .task-information strong {
-    display: block;
-    margin-bottom: 6px;
-}
+    background: var(--primary);
+    color: white;
 
-#task-list .task-information p {
-    margin: 0;
-}
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
 
-/* Zone du statut */
-#task-list .task-status-area {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* Zone des boutons */
-#task-list .task-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-left: auto;
-}
-
-/* Boutons des tâches */
-#task-list .task-actions button {
-    padding: 8px 14px;
-    border-radius: 5px;
     cursor: pointer;
+
+    transition: background 0.2s ease,
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
 }
 
-/* Espacement et alignement des boutons des projets */
+button:hover {
+    background: var(--primary-dark);
+    box-shadow: 0 3px 10px rgba(49, 87, 213, 0.2);
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+button:focus-visible {
+    outline: 3px solid rgba(49, 87, 213, 0.3);
+    outline-offset: 3px;
+}
+
+/* Boutons principaux des formulaires */
+
+#project-form button,
+#task-form button {
+    margin-top: 8px;
+    padding: 13px 18px;
+    font-size: 14px;
+}
+
+/* ========================================
+   7. LISTES GENERALES
+======================================== */
+
+ul {
+    list-style: none;
+    margin: 24px 0 0;
+    padding: 0;
+}
+
+/* ========================================
+   8. PROJETS
+======================================== */
+
 #project-list li {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+
     margin-bottom: 12px;
+    padding: 13px;
+
+    background: #f8faff;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+
+    transition: background 0.2s ease,
+                border-color 0.2s ease,
+                transform 0.2s ease;
+}
+
+#project-list li:hover {
+    background: var(--primary-light);
+    border-color: #c7d2fe;
+    transform: translateY(-2px);
 }
 
 #project-list li span {
     flex: 1;
+    min-width: 0;
+
+    color: #334155;
+    font-size: 14px;
+    font-weight: 600;
+
+    overflow-wrap: anywhere;
+    cursor: pointer;
 }
 
 #project-list li button {
-    padding: 8px 12px;
+    flex-shrink: 0;
+    padding: 8px 11px;
+    font-size: 12px;
+}
+
+/* Bouton Modifier */
+
+#project-list li button:first-of-type {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+#project-list li button:first-of-type:hover {
+    background: #c7d2fe;
+}
+
+/* Bouton Supprimer */
+
+#project-list li button:last-of-type {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+#project-list li button:last-of-type:hover {
+    background: #fecaca;
+}
+
+/* ========================================
+   9. MESSAGE SANS PROJET
+======================================== */
+
+#no-project-message {
+    margin: 15px 0;
+    padding: 25px 18px;
+
+    text-align: center;
+    color: var(--text-light);
+    font-size: 14px;
+
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 11px;
+}
+
+/* ========================================
+   10. TITRE DU PROJET SELECTIONNE
+======================================== */
+
+#selected-project-name {
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border);
+    overflow-wrap: anywhere;
+}
+
+/* ========================================
+   11. TACHES
+======================================== */
+
+#task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+#task-list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+
+    margin: 0;
+    padding: 18px;
+
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    border-radius: 11px;
+
+    transition: box-shadow 0.2s ease,
+                transform 0.2s ease;
+}
+
+#task-list li:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+}
+
+/* Informations de la tâche */
+
+#task-list li > div:first-child {
+    flex: 1 1 100%;
+    min-width: 0;
+}
+
+#task-list li strong {
+    display: block;
+    margin-bottom: 6px;
+
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 700;
+
+    overflow-wrap: anywhere;
+}
+
+#task-list li p {
+    margin: 0;
+    color: var(--text-light);
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+/* ========================================
+   12. STATUT DES TACHES
+======================================== */
+
+#task-list li > div:nth-child(2) {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+#task-list input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+
+    accent-color: var(--success);
     cursor: pointer;
+}
+
+#task-list input[type="checkbox"]:disabled {
+    cursor: wait;
+}
+
+#task-list li label {
+    color: var(--text-light);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* ========================================
+   13. ACTIONS SUR LES TACHES
+======================================== */
+
+#task-list .task-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+
+    margin-left: auto;
+}
+
+#task-list .task-actions button {
+    padding: 8px 12px;
+    font-size: 12px;
+}
+
+/* Bouton Modifier */
+
+#task-list .task-actions button:first-child {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+#task-list .task-actions button:first-child:hover {
+    background: #c7d2fe;
+}
+
+/* Bouton Supprimer */
+
+#task-list .task-actions button:nth-child(2) {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+#task-list .task-actions button:nth-child(2):hover {
+    background: #fecaca;
+}
+
+/* Sélection du projet de destination */
+
+#task-list .move-task-select {
+    width: auto;
+    max-width: 220px;
+    min-width: 150px;
+
+    padding: 8px 10px;
+    font-size: 12px;
+}
+
+#task-list .move-task-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ========================================
+   14. RESPONSIVE - TABLETTES
+======================================== */
+
+@media (max-width: 850px) {
+
+    main {
+        grid-template-columns: 1fr;
+        max-width: 650px;
+        gap: 22px;
+        margin: 28px auto;
+    }
+
+    #dashboard-section {
+        grid-column: auto;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    section {
+        padding: 24px;
+    }
+}
+
+/* ========================================
+   15. RESPONSIVE - TELEPHONES
+======================================== */
+
+@media (max-width: 520px) {
+
+    header {
+        padding: 30px 15px;
+    }
+
+    header h1 {
+        font-size: 24px;
+    }
+
+    header p {
+        font-size: 13px;
+    }
+
+    main {
+        padding: 0 14px;
+        margin: 20px auto;
+        gap: 18px;
+    }
+
+    section {
+        padding: 19px;
+    }
+
+    h2 {
+        font-size: 19px;
+    }
+
+    #dashboard-section {
+        padding: 19px;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .dashboard-card {
+        padding: 16px;
+    }
+
+    .dashboard-card strong {
+        font-size: 28px;
+    }
+
+    #project-list li {
+        flex-wrap: wrap;
+    }
+
+    #project-list li span {
+        flex-basis: 100%;
+    }
+
+    #task-list li {
+        padding: 14px;
+        gap: 12px;
+    }
+
+    #task-list .task-actions {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    #task-list .move-task-select {
+        flex: 1;
+        max-width: none;
+    }
+}
+
+/* ========================================
+   16. ACCESSIBILITE
+======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
 }
